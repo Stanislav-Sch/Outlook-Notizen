@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Email Notizen</title>
+  <script src="https://appsforoffice.microsoft.com/lib/1/hosted/office.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg:         #0f0f11;
+      --surface:    #18181c;
+      --border:     #2a2a32;
+      --accent:     #f5c842;
+      --accent-dim: #b89a20;
+      --text:       #e8e8ea;
+      --muted:      #666672;
+      --danger:     #e05c5c;
+      --radius:     6px;
+      --mono:       'IBM Plex Mono', monospace;
+      --sans:       'IBM Plex Sans', sans-serif;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: var(--sans);
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      font-size: 13px;
+    }
+
+    /* ── Header ── */
+    header {
+      padding: 14px 16px 10px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .logo {
+      width: 28px; height: 28px;
+      background: var(--accent);
+      border-radius: 4px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 14px; flex-shrink: 0;
+    }
+    header h1 {
+      font-size: 13px;
+      font-weight: 500;
+      letter-spacing: 0.04em;
+      color: var(--text);
+    }
+    header p {
+      font-size: 11px;
+      color: var(--muted);
+      font-family: var(--mono);
+    }
+
+    /* ── Email-Info ── */
+    #email-info {
+      padding: 10px 16px;
+      border-bottom: 1px solid var(--border);
+      background: var(--surface);
+    }
+    #email-subject {
+      font-size: 11px;
+      color: var(--muted);
+      font-family: var(--mono);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    #email-subject span {
+      color: var(--accent);
+    }
+
+    /* ── Notiz-Bereich ── */
+    #note-area {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      padding: 14px 16px;
+      gap: 10px;
+    }
+
+    .label-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .label {
+      font-size: 10px;
+      font-family: var(--mono);
+      color: var(--muted);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+    #char-count {
+      font-size: 10px;
+      font-family: var(--mono);
+      color: var(--muted);
+    }
+
+    #note-input {
+      flex: 1;
+      min-height: 140px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      color: var(--text);
+      font-family: var(--sans);
+      font-size: 13px;
+      line-height: 1.6;
+      padding: 10px 12px;
+      resize: none;
+      outline: none;
+      transition: border-color 0.15s;
+    }
+    #note-input:focus {
+      border-color: var(--accent);
+    }
+    #note-input::placeholder {
+      color: var(--muted);
+    }
+
+    /* ── Status-Badge ── */
+    #save-status {
+      font-size: 10px;
+      font-family: var(--mono);
+      color: var(--muted);
+      min-height: 14px;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      transition: opacity 0.3s;
+    }
+    #save-status.saved  { color: #4caf7d; }
+    #save-status.saving { color: var(--accent); }
+    #save-status.error  { color: var(--danger); }
+
+    /* ── Buttons ── */
+    .btn-row {
+      display: flex;
+      gap: 8px;
+    }
+    button {
+      cursor: pointer;
+      font-family: var(--sans);
+      font-size: 12px;
+      font-weight: 500;
+      border: none;
+      border-radius: var(--radius);
+      padding: 8px 14px;
+      transition: all 0.15s;
+    }
+    #btn-save {
+      background: var(--accent);
+      color: #0f0f11;
+      flex: 1;
+    }
+    #btn-save:hover { background: #f0c020; }
+    #btn-save:active { transform: scale(0.98); }
+
+    #btn-delete {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--muted);
+      padding: 8px 10px;
+    }
+    #btn-delete:hover { border-color: var(--danger); color: var(--danger); }
+
+    /* ── Notizen-Liste ── */
+    #notes-section {
+      border-top: 1px solid var(--border);
+      padding: 12px 16px 16px;
+    }
+    #notes-section .label { margin-bottom: 8px; display: block; }
+
+    #notes-list {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      max-height: 160px;
+      overflow-y: auto;
+    }
+    #notes-list::-webkit-scrollbar { width: 3px; }
+    #notes-list::-webkit-scrollbar-track { background: transparent; }
+    #notes-list::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+    .note-entry {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 8px 10px;
+      cursor: pointer;
+      transition: border-color 0.15s;
+    }
+    .note-entry:hover { border-color: var(--accent-dim); }
+    .note-entry .ne-subject {
+      font-size: 10px;
+      font-family: var(--mono);
+      color: var(--accent);
+      margin-bottom: 3px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .note-entry .ne-text {
+      font-size: 11px;
+      color: var(--muted);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .note-entry .ne-date {
+      font-size: 10px;
+      font-family: var(--mono);
+      color: var(--border);
+      margin-top: 3px;
+    }
+
+    #empty-state {
+      font-size: 11px;
+      color: var(--muted);
+      font-family: var(--mono);
+      text-align: center;
+      padding: 12px 0;
+    }
+
+    /* ── Loading ── */
+    #loading {
+      position: fixed; inset: 0;
+      background: var(--bg);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      z-index: 100;
+    }
+    .spinner {
+      width: 24px; height: 24px;
+      border: 2px solid var(--border);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    #loading p {
+      font-family: var(--mono);
+      font-size: 11px;
+      color: var(--muted);
+    }
+
+    .hidden { display: none !important; }
+  </style>
+</head>
+<body>
+
+<!-- Loading Overlay -->
+<div id="loading">
+  <div class="spinner"></div>
+  <p>Lade Add-in…</p>
+</div>
+
+<!-- Header -->
+<header>
+  <div class="logo">📝</div>
+  <div>
+    <h1>Email Notizen</h1>
+    <p>Persönliche Anmerkungen</p>
+  </div>
+</header>
+
+<!-- Aktuelle Email -->
+<div id="email-info">
+  <div id="email-subject"><span id="subject-text">Lade Email…</span></div>
+</div>
+
+<!-- Notiz-Editor -->
+<div id="note-area">
+  <div class="label-row">
+    <span class="label">// Deine Notiz</span>
+    <span id="char-count">0 Zeichen</span>
+  </div>
+  <textarea
+    id="note-input"
+    placeholder="Notiz zu dieser Email eingeben…&#10;&#10;z.B. Wiedervorlage, Aufgaben, Kontext…"
+    maxlength="2000"
+  ></textarea>
+  <div id="save-status"></div>
+  <div class="btn-row">
+    <button id="btn-save">💾 Speichern</button>
+    <button id="btn-delete" title="Notiz löschen">🗑</button>
+  </div>
+</div>
+
+<!-- Alle Notizen -->
+<div id="notes-section">
+  <span class="label">// Alle Notizen</span>
+  <div id="notes-list">
+    <p id="empty-state">Noch keine Notizen gespeichert.</p>
+  </div>
+</div>
+
+<script>
+// ─────────────────────────────────────────
+//  STORAGE HELPERS
+// ─────────────────────────────────────────
+const STORAGE_KEY = 'outlook_notes_v1';
+
+function loadAllNotes() {
+  try {
+    return JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
+  } catch { return {}; }
+}
+
+function saveAllNotes(notes) {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(notes));
+}
+
+function getNoteForId(itemId) {
+  return loadAllNotes()[itemId] || null;
+}
+
+function saveNoteForId(itemId, subject, text) {
+  const all = loadAllNotes();
+  all[itemId] = { text, subject, savedAt: new Date().toISOString() };
+  saveAllNotes(all);
+}
+
+function deleteNoteForId(itemId) {
+  const all = loadAllNotes();
+  delete all[itemId];
+  saveAllNotes(all);
+}
+
+// ─────────────────────────────────────────
+//  UI HELPERS
+// ─────────────────────────────────────────
+let currentItemId = null;
+let currentSubject = '';
+let autoSaveTimer = null;
+
+const noteInput    = document.getElementById('note-input');
+const saveStatus   = document.getElementById('save-status');
+const subjectText  = document.getElementById('subject-text');
+const charCount    = document.getElementById('char-count');
+const notesList    = document.getElementById('notes-list');
+const emptyState   = document.getElementById('empty-state');
+
+function setStatus(msg, cls = '') {
+  saveStatus.textContent = msg;
+  saveStatus.className = cls;
+}
+
+function refreshCharCount() {
+  charCount.textContent = `${noteInput.value.length} Zeichen`;
+}
+
+function renderAllNotes() {
+  const all = loadAllNotes();
+  const entries = Object.entries(all);
+  notesList.innerHTML = '';
+
+  if (entries.length === 0) {
+    notesList.appendChild(emptyState);
+    emptyState.classList.remove('hidden');
+    return;
+  }
+
+  // Sort newest first
+  entries.sort((a, b) => new Date(b[1].savedAt) - new Date(a[1].savedAt));
+
+  entries.forEach(([id, note]) => {
+    const div = document.createElement('div');
+    div.className = 'note-entry';
+    const d = new Date(note.savedAt);
+    const dateStr = d.toLocaleDateString('de-DE', { day:'2-digit', month:'2-digit', year:'2-digit' })
+                  + ' ' + d.toLocaleTimeString('de-DE', { hour:'2-digit', minute:'2-digit' });
+    div.innerHTML = `
+      <div class="ne-subject">${escapeHtml(note.subject || '(kein Betreff)')}</div>
+      <div class="ne-text">${escapeHtml(note.text)}</div>
+      <div class="ne-date">${dateStr}</div>
+    `;
+    notesList.appendChild(div);
+  });
+}
+
+function escapeHtml(str) {
+  return (str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function loadNoteIntoEditor() {
+  if (!currentItemId) return;
+  const note = getNoteForId(currentItemId);
+  noteInput.value = note ? note.text : '';
+  refreshCharCount();
+  setStatus(note ? `Gespeichert: ${new Date(note.savedAt).toLocaleTimeString('de-DE', {hour:'2-digit',minute:'2-digit'})}` : '', note ? 'saved' : '');
+}
+
+// ─────────────────────────────────────────
+//  SAVE / DELETE
+// ─────────────────────────────────────────
+function saveNote() {
+  if (!currentItemId) return;
+  const text = noteInput.value.trim();
+  if (!text) {
+    deleteNoteForId(currentItemId);
+    setStatus('Notiz gelöscht.', '');
+    renderAllNotes();
+    return;
+  }
+  setStatus('Speichern…', 'saving');
+  setTimeout(() => {
+    saveNoteForId(currentItemId, currentSubject, text);
+    const t = new Date().toLocaleTimeString('de-DE', {hour:'2-digit',minute:'2-digit'});
+    setStatus(`✓ Gespeichert um ${t}`, 'saved');
+    renderAllNotes();
+  }, 200);
+}
+
+document.getElementById('btn-save').addEventListener('click', saveNote);
+
+document.getElementById('btn-delete').addEventListener('click', () => {
+  if (!currentItemId) return;
+  deleteNoteForId(currentItemId);
+  noteInput.value = '';
+  refreshCharCount();
+  setStatus('Notiz gelöscht.', '');
+  renderAllNotes();
+});
+
+// Auto-save beim Tippen (nach 1.5s Pause)
+noteInput.addEventListener('input', () => {
+  refreshCharCount();
+  clearTimeout(autoSaveTimer);
+  setStatus('Nicht gespeichert…', '');
+  autoSaveTimer = setTimeout(saveNote, 1500);
+});
+
+// ─────────────────────────────────────────
+//  OFFICE.JS INIT
+// ─────────────────────────────────────────
+Office.onReady((info) => {
+  document.getElementById('loading').classList.add('hidden');
+
+  if (info.host !== Office.HostType.Outlook) {
+    subjectText.textContent = '⚠ Kein Outlook-Kontext';
+    return;
+  }
+
+  const item = Office.context.mailbox.item;
+
+  // Betreff lesen
+  if (item.subject && typeof item.subject === 'object') {
+    item.subject.getAsync((res) => {
+      currentSubject = res.value || '(kein Betreff)';
+      subjectText.textContent = currentSubject;
+    });
+  } else {
+    currentSubject = item.subject || '(kein Betreff)';
+    subjectText.textContent = currentSubject;
+  }
+
+  // Item-ID als eindeutiger Schlüssel
+  currentItemId = item.itemId || item.conversationId || 'fallback-' + Date.now();
+
+  loadNoteIntoEditor();
+  renderAllNotes();
+
+  // Reagiere auf Wechsel der selektierten Email
+  // (Für Outlook Web: Add-in wird neu geladen, für Desktop kann man Callback registrieren)
+  if (Office.context.mailbox.addHandlerAsync) {
+    Office.context.mailbox.addHandlerAsync(
+      Office.EventType.ItemChanged,
+      () => {
+        const newItem = Office.context.mailbox.item;
+        if (!newItem) return;
+        currentItemId = newItem.itemId || newItem.conversationId;
+        if (newItem.subject && typeof newItem.subject === 'object') {
+          newItem.subject.getAsync((res) => {
+            currentSubject = res.value || '(kein Betreff)';
+            subjectText.textContent = currentSubject;
+            loadNoteIntoEditor();
+            renderAllNotes();
+          });
+        } else {
+          currentSubject = newItem.subject || '(kein Betreff)';
+          subjectText.textContent = currentSubject;
+          loadNoteIntoEditor();
+          renderAllNotes();
+        }
+      }
+    );
+  }
+});
+</script>
+</body>
+</html>
