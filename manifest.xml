@@ -12,9 +12,9 @@
   <DefaultLocale>de-DE</DefaultLocale>
   <DisplayName DefaultValue="Email Notizen"/>
   <Description DefaultValue="Persönliche Notizen zu beliebigen Emails hinzufügen"/>
-  <IconUrl DefaultValue="https://localhost:3000/icon-64.png"/>
-  <HighResolutionIconUrl DefaultValue="https://localhost:3000/icon-128.png"/>
-  <SupportUrl DefaultValue="https://localhost:3000"/>
+  <IconUrl DefaultValue="https://stanislav-sch.github.io/Outlook-Notizen/icon-64.png"/>
+  <HighResolutionIconUrl DefaultValue="https://stanislav-sch.github.io/Outlook-Notizen/icon-128.png"/>
+  <SupportUrl DefaultValue="https://stanislav-sch.github.io/Outlook-Notizen"/>
 
   <Hosts>
     <Host Name="Mailbox"/>
@@ -29,7 +29,7 @@
   <FormSettings>
     <Form xsi:type="ItemRead">
       <DesktopSettings>
-        <SourceLocation DefaultValue="https://localhost:3000/taskpane.html"/>
+        <SourceLocation DefaultValue="https://stanislav-sch.github.io/Outlook-Notizen/taskpane.html"/>
         <RequestedHeight>300</RequestedHeight>
       </DesktopSettings>
     </Form>
@@ -80,13 +80,13 @@
     </Hosts>
     <Resources>
       <bt:Images>
-        <bt:Image id="Icon.16x16" DefaultValue="https://localhost:3000/icon-16.png"/>
-        <bt:Image id="Icon.32x32" DefaultValue="https://localhost:3000/icon-32.png"/>
-        <bt:Image id="Icon.80x80" DefaultValue="https://localhost:3000/icon-80.png"/>
+        <bt:Image id="Icon.16x16" DefaultValue="https://stanislav-sch.github.io/Outlook-Notizen/icon-16.png"/>
+        <bt:Image id="Icon.32x32" DefaultValue="https://stanislav-sch.github.io/Outlook-Notizen/icon-32.png"/>
+        <bt:Image id="Icon.80x80" DefaultValue="https://stanislav-sch.github.io/Outlook-Notizen/icon-80.png"/>
       </bt:Images>
       <bt:Urls>
-        <bt:Url id="Commands.Url" DefaultValue="https://localhost:3000/commands.html"/>
-        <bt:Url id="Taskpane.Url" DefaultValue="https://localhost:3000/taskpane.html"/>
+        <bt:Url id="Commands.Url" DefaultValue="https://stanislav-sch.github.io/Outlook-Notizen/commands.html"/>
+        <bt:Url id="Taskpane.Url" DefaultValue="https://stanislav-sch.github.io/Outlook-Notizen/taskpane.html"/>
       </bt:Urls>
       <bt:ShortStrings>
         <bt:String id="GroupLabel" DefaultValue="Notizen"/>
